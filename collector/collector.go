@@ -17,12 +17,13 @@ var desc = struct {
 	scrapeDuration *prometheus.Desc
 	scrapeSuccess  *prometheus.Desc
 
-	clientUpload      *prometheus.Desc
-	clientDownload    *prometheus.Desc
+	clientUpload       *prometheus.Desc
+	clientDownload     *prometheus.Desc
 	clientTrafficLimit *prometheus.Desc
-	clientExpiry      *prometheus.Desc
-	clientOnline      *prometheus.Desc
-	clientEnabled     *prometheus.Desc
+	clientExpiry       *prometheus.Desc
+	clientOnline       *prometheus.Desc
+	clientEnabled      *prometheus.Desc
+	clientInbound      *prometheus.Desc
 
 	inboundUp     *prometheus.Desc
 	inboundDown   *prometheus.Desc
@@ -67,22 +68,22 @@ var desc = struct {
 	clientUpload: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "client", "upload_bytes_total"),
 		"Total upload bytes per client.",
-		[]string{"email", "inbound_remark", "inbound_id", "protocol", "enable"}, nil,
+		[]string{"email"}, nil,
 	),
 	clientDownload: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "client", "download_bytes_total"),
 		"Total download bytes per client.",
-		[]string{"email", "inbound_remark", "inbound_id", "protocol", "enable"}, nil,
+		[]string{"email"}, nil,
 	),
 	clientTrafficLimit: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "client", "traffic_limit_bytes"),
 		"Traffic quota in bytes per client (0 means unlimited).",
-		[]string{"email", "inbound_remark", "inbound_id", "protocol", "enable"}, nil,
+		[]string{"email"}, nil,
 	),
 	clientExpiry: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "client", "expiry_timestamp_seconds"),
 		"Client expiry time as unix timestamp (0 means never expires).",
-		[]string{"email", "inbound_remark", "inbound_id", "protocol", "enable"}, nil,
+		[]string{"email"}, nil,
 	),
 	clientOnline: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "client", "online"),
@@ -93,6 +94,11 @@ var desc = struct {
 		prometheus.BuildFQName(namespace, "client", "enabled"),
 		"Whether the client is enabled (1=enabled, 0=disabled).",
 		[]string{"email", "inbound_remark", "inbound_id"}, nil,
+	),
+	clientInbound: prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "client", "inbound_info"),
+		"Client-to-inbound association (always 1).",
+		[]string{"email", "inbound_remark", "inbound_id", "protocol"}, nil,
 	),
 	inboundUp: prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "inbound", "upload_bytes_total"),
@@ -313,6 +319,7 @@ func (col *Collector) IsHealthy() bool {
 
 func collectInboundMetrics(ch chan<- prometheus.Metric, inbounds []client.Inbound, onlineSet map[string]bool) {
 	allEmails := make(map[string]bool)
+	emitted := make(map[string]bool)
 
 	for _, ib := range inbounds {
 		remark := sanitizeLabel(ib.Remark)
@@ -325,23 +332,27 @@ func collectInboundMetrics(ch chan<- prometheus.Metric, inbounds []client.Inboun
 
 		for _, cs := range ib.ClientStats {
 			email := sanitizeLabel(cs.Email)
-			csEnableStr := fmt.Sprintf("%t", cs.Enable)
-
-			if email != "" {
-				allEmails[email] = true
+			if email == "" {
+				continue
 			}
-
-			ch <- prometheus.MustNewConstMetric(desc.clientUpload, prometheus.GaugeValue, float64(cs.Up), email, remark, ibID, ib.Protocol, csEnableStr)
-			ch <- prometheus.MustNewConstMetric(desc.clientDownload, prometheus.GaugeValue, float64(cs.Down), email, remark, ibID, ib.Protocol, csEnableStr)
-			ch <- prometheus.MustNewConstMetric(desc.clientTrafficLimit, prometheus.GaugeValue, float64(cs.Total), email, remark, ibID, ib.Protocol, csEnableStr)
-
-			var expirySeconds float64
-			if cs.ExpiryTime > 0 {
-				expirySeconds = float64(cs.ExpiryTime) / 1000.0
-			}
-			ch <- prometheus.MustNewConstMetric(desc.clientExpiry, prometheus.GaugeValue, expirySeconds, email, remark, ibID, ib.Protocol, csEnableStr)
+			allEmails[email] = true
 
 			ch <- prometheus.MustNewConstMetric(desc.clientEnabled, prometheus.GaugeValue, boolToF(cs.Enable), email, remark, ibID)
+			ch <- prometheus.MustNewConstMetric(desc.clientInbound, prometheus.GaugeValue, 1, email, remark, ibID, ib.Protocol)
+
+			if !emitted[email] {
+				emitted[email] = true
+
+				ch <- prometheus.MustNewConstMetric(desc.clientUpload, prometheus.GaugeValue, float64(cs.Up), email)
+				ch <- prometheus.MustNewConstMetric(desc.clientDownload, prometheus.GaugeValue, float64(cs.Down), email)
+				ch <- prometheus.MustNewConstMetric(desc.clientTrafficLimit, prometheus.GaugeValue, float64(cs.Total), email)
+
+				var expirySeconds float64
+				if cs.ExpiryTime > 0 {
+					expirySeconds = float64(cs.ExpiryTime) / 1000.0
+				}
+				ch <- prometheus.MustNewConstMetric(desc.clientExpiry, prometheus.GaugeValue, expirySeconds, email)
+			}
 		}
 	}
 
