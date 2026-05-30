@@ -21,8 +21,8 @@ All metrics are prefixed with `xui_`.
 
 ## Requirements
 
-- 3X-UI panel with API token (Settings → Security → API Token)
-- Bearer token authentication
+- 3X-UI panel >= 3.1.0 
+- API token (Settings → Security → API Token)
 
 ## Installation
 
