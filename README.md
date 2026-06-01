@@ -1,6 +1,22 @@
+<div align="center">
+
 # 3x-ui-exporter
 
-Prometheus exporter for [3X-UI](https://github.com/MHSanaei/3x-ui) panel. Collects client traffic, online status, server health, and node metrics via native panel REST API.
+**Prometheus exporter for [3X-UI](https://github.com/MHSanaei/3x-ui) panel.**
+
+Collects client traffic, online status, server health, and node metrics via native panel REST API.
+
+[![Version](https://img.shields.io/github/v/release/zbndev/3x-ui-exporter)](https://github.com/zbndev/3x-ui-exporter/releases)
+[![License](https://img.shields.io/github/license/zbndev/3x-ui-exporter)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/zbndev/3x-ui-exporter/total)](https://github.com/zbndev/3x-ui-exporter/releases)
+
+</div>
+
+## Example grafana dashboard
+
+![Grafana dashboard demo](./assets/example_grafana.png)
+
+[JSON](./assets/example_dashboard.json)
 
 ## Metrics
 
