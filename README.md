@@ -6,9 +6,9 @@
 
 Collects client traffic, online status, server health, and node metrics via native panel REST API.
 
-[![Version](https://img.shields.io/github/v/release/zbndev/3x-ui-exporter)](https://github.com/zbndev/3x-ui-exporter/releases)
-[![License](https://img.shields.io/github/license/zbndev/3x-ui-exporter)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/zbndev/3x-ui-exporter/total)](https://github.com/zbndev/3x-ui-exporter/releases)
+![Release](https://www.shieldcn.dev/github/release/zbndev/3x-ui-exporter.svg?size=sm&theme=zinc)
+![GitHub Downloads](https://shieldcn.dev/github/downloads/zbndev/3x-ui-exporter.svg?variant=secondary)
+![GitHub Stars](https://www.shieldcn.dev/github/stars/zbndev/3x-ui-exporter.svg?variant=secondary&size=sm&theme=zinc)
 
 </div>
 
